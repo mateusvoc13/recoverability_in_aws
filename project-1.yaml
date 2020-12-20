@@ -55,19 +55,12 @@ Resources:
         - Key: Name
           Value: !Ref VpcName
 
-  PeeringConnection:
-    Type: 'AWS::EC2::VPCPeeringConnection'
-    Properties:
-      PeerRegion: 'us-west-2'
-      PeerVpcId: !Ref SecondaryVPC
-      VpcId: !Ref VPC
-
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref Vpc1Name
+          Value: !Ref VpcName
 
   InternetGatewayAttachment1:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -85,7 +78,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${Vpc1Name} Public Subnet (${AZ1})
+            - ${VpcName} Public Subnet (${AZ1})
             - { AZ1: !Select [ 0, !GetAZs  '' ] }
 
   PublicSubnet2:
@@ -98,7 +91,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${Vpc1Name} Public Subnet (${AZ2})
+            - ${VpcName} Public Subnet (${AZ2})
             - { AZ2: !Select [ 1, !GetAZs  '' ] }
 
   PrivateSubnet1:
@@ -111,7 +104,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${Vpc1Name} Private Subnet (${AZ1})
+            - ${VpcName} Private Subnet (${AZ1})
             - { AZ1: !Select [ 0, !GetAZs  '' ] }
 
   PrivateSubnet2:
@@ -124,7 +117,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - ${Vpc1Name} Private Subnet (${AZ2})
+            - ${VpcName} Private Subnet (${AZ2})
             - { AZ2: !Select [ 1, !GetAZs  '' ] }
 
   PublicRouteTable:
@@ -133,7 +126,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Vpc1Name} Public Routes
+          Value: !Sub ${VpcName} Public Routes
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -161,7 +154,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub ${Vpc1Name} Private Routes
+          Value: !Sub ${VpcName} Private Routes
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -210,7 +203,6 @@ Resources:
   DatabaseSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      VpcId: !Ref VPC
       DBSubnetGroupDescription: Udacity ARR Project - Database Subnet 1
       DBSubnetGroupName: UDARR-Subnet-Database
       SubnetIds:
@@ -218,7 +210,7 @@ Resources:
         - !Ref PrivateSubnet2
       Tags:
         - Key: Name
-          Value: !Sub ${Vpc1Name} DB Subnet
+          Value: !Sub ${VpcName} DB Subnet
 
   Database:
     Type: AWS::RDS::DBInstance
@@ -232,8 +224,8 @@ Resources:
       MasterUserPassword: dbpassword
       AllocatedStorage: '5'
       MultiAZ: true
-      DBSecurityGroups:
-      - Ref: DatabaseSecurityGroup
+      VPCSecurityGroups:
+       - !GetAtt DatabaseSecurityGroup.GroupId
       Tags:
         - Key: Name
           Value: UDARR - Primary Database
@@ -241,45 +233,33 @@ Resources:
   Webserver:
     Type: AWS::EC2::Instance
     Properties:
-      SecurityGroups:
-        - Ref: ApplicationSecurityGroup
+      SecurityGroupIds:
+        - !Ref ApplicationSecurityGroup
       InstanceType: t2.micro
-      SubnetId: !Ref PublicSubnet1
       KeyName: zenbook-mateus
-      ImageID: !Ref LatestAmiId
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref PublicSubnet1
 
 Outputs:
   VPC:
-    Description: A reference to the created VPC
+    Description: VPC ID
     Value: !Ref VPC
 
   PublicSubnets:
     Description: A list of the public subnets
-    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
+    Value: !Join [ ", ", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
 
   PrivateSubnets:
     Description: A list of the private subnets
-    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+    Value: !Join [ ", ", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
 
-  PublicSubnet1:
-    Description: A reference to the public subnet in the 1st Availability Zone
-    Value: !Ref PublicSubnet1
+  DatabaseSecurityGroup:
+    Description: ID of the database security group
+    Value: !Ref DatabaseSecurityGroup
 
-  PublicSubnet2:
-    Description: A reference to the public subnet in the 2nd Availability Zone
-    Value: !Ref PublicSubnet2
-
-  PrivateSubnet1:
-    Description: A reference to the private subnet in the 1st Availability Zone
-    Value: !Ref PrivateSubnet1
-
-  PrivateSubnet2:
-    Description: A reference to the private subnet in the 2nd Availability Zone
-    Value: !Ref PrivateSubnet2
-
-  NoIngressSecurityGroup:
-    Description: Security group with no ingress rule
-    Value: !Ref NoIngressSecurityGroup
+  ApplicationSecurityGroup:
+    Description: ID of the EC2 instance security group
+    Value: !Ref ApplicationSecurityGroup
 
   Webserver:
     Description: A reference to the webserver
