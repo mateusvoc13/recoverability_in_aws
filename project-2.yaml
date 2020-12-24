@@ -1,66 +1,69 @@
-Description: AWS Cloud Architect Project - Design for Availability, Resilience, and Reliability
+Description: AWS Cloud Architect Project - Design for Availability, Resilience, and Reliability - Secondary Netwoork with Read Replica DB
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
   VpcName:
-    Description: Primary
-    Type: String
-
-  Vpc2Name:
     Description: Secondary
     Type: String
 
-  Vpc1CIDR:
+  VpcCIDR:
     Description: IP range (CIDR notation) for this VPC
     Type: String
-    Default: 10.1.0.0/16
-
-  Vpc2CIDR:
-    Description: IP range (CIDR notation) for this VPC
-    Type: String
-    Default: 10.2.0.0/16
+    Default: 11.2.0.0/16
 
   PublicSubnet1CIDR:
     Description: IP range (CIDR notation) for the public subnet in the first Availability Zone
     Type: String
-    Default: 10.1.10.0/24
+    Default: 11.2.10.0/24
 
   PublicSubnet2CIDR:
     Description: IP range (CIDR notation) for the public subnet in the second Availability Zone
     Type: String
-    Default: 10.1.11.0/24
-
-  PeeringConnection:
-    Type: 'AWS::EC2::VPCPeeringConnection'
-    Properties:
-      PeerRegion: 'us-west-2'
-      PeerVpcId: !Ref SecondaryVPC
-      VpcId: !Ref VPC
+    Default: 11.2.11.0/24
 
   PrivateSubnet1CIDR:
     Description: IP range (CIDR notation) for the private subnet in the first Availability Zone
     Type: String
-    Default: 10.1.20.0/24
+    Default: 11.2.20.0/24
 
   PrivateSubnet2CIDR:
     Description: IP range (CIDR notation) for the private subnet in the second Availability Zone
     Type: String
-    Default: 10.1.21.0/24
+    Default: 11.2.21.0/24
 
   LatestAmiId:
     Type:  'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
 
+  PrimaryVPCRegion:
+    Type: String
+    Default: 'us-east-2'
+
+  PrimaryVPCId:
+    Type: String
+    Default: vpc-0d91ef3cddb1ae4f0
+
+  PrimaryDBIdentifier:
+    Type: String
+    Default: arn:aws:rds:us-east-2:992364114663:db:primarydb
+
 Resources:
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
-      CidrBlock: !Ref Vpc1CIDR
+      CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref Vpc2Name
+          Value: !Ref VpcName
+
+  PeeringConnection:
+    Type: 'AWS::EC2::VPCPeeringConnection'
+    Properties:
+      PeerRegion: !Ref PrimaryVPCRegion
+      PeerVpcId: !Ref PrimaryVPCId
+      VpcId: !Ref VPC
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -222,20 +225,13 @@ Resources:
   Database:
     Type: AWS::RDS::DBInstance
     Properties:
+      DBInstanceIdentifier: 'read-replica'
       DBInstanceClass: db.t2.micro
-      DBName: 'udacity'
-      DBSubnetGroupName: !Ref DatabaseSubnetGroup
-      DeleteAutomatedBackups: true
-      Engine: MySQL
-      MasterUsername: dbadmin
-      MasterUserPassword: dbpassword
-      AllocatedStorage: '5'
-      MultiAZ: true
-      VPCSecurityGroups:
-       - !GetAtt DatabaseSecurityGroup.GroupId
+      SourceRegion: 'us-east-2'
+      SourceDBInstanceIdentifier: !Ref PrimaryDBIdentifier
       Tags:
         - Key: Name
-          Value: UDARR - Primary Database
+          Value: UDARR - Secondary Database
 
   Webserver:
     Type: AWS::EC2::Instance

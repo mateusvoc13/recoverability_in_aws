@@ -6,19 +6,10 @@ Parameters:
     Description: Primary
     Type: String
 
-  Vpc2Name:
-    Description: Secondary
-    Type: String
-
   Vpc1CIDR:
     Description: IP range (CIDR notation) for this VPC
     Type: String
     Default: 10.1.0.0/16
-
-  Vpc2CIDR:
-    Description: IP range (CIDR notation) for this VPC
-    Type: String
-    Default: 10.2.0.0/16
 
   PublicSubnet1CIDR:
     Description: IP range (CIDR notation) for the public subnet in the first Availability Zone
@@ -215,6 +206,7 @@ Resources:
   Database:
     Type: AWS::RDS::DBInstance
     Properties:
+      DBInstanceIdentifier: primarydb
       DBInstanceClass: db.t2.micro
       DBName: 'udacity'
       DBSubnetGroupName: !Ref DatabaseSubnetGroup
@@ -224,6 +216,7 @@ Resources:
       MasterUserPassword: dbpassword
       AllocatedStorage: '5'
       MultiAZ: true
+      BackupRetentionPeriod: 1
       VPCSecurityGroups:
        - !GetAtt DatabaseSecurityGroup.GroupId
       Tags:
@@ -256,6 +249,10 @@ Outputs:
   DatabaseSecurityGroup:
     Description: ID of the database security group
     Value: !Ref DatabaseSecurityGroup
+
+  DatabaseId:
+    Description: ID of the database for the read replica config
+    Value: !Ref Database
 
   ApplicationSecurityGroup:
     Description: ID of the EC2 instance security group
