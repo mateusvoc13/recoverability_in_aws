@@ -1,0 +1,38 @@
+* Configuration availability
+
+  Here we present you the estimate availability for the multi-AZ/multi-region
+  configuration that was created in this project.
+
+  In this case, the configuration contains:
+  - Multi-AZ database in a primary region;
+  - Read-replica in the secondary region.
+
+  The outage scenarios that will be considered for the estimates are:
+  - Single AZ outage;
+  - Single Region outage;
+
+  The parameters considered are:
+  - RTO: Recovery time objective
+  - RPO: Recovery Point objective
+
+  Here are the estimates:
+  - Minimum RTO for a single AZ outage:
+
+    According to AWS, the failover times are typically 60–120 seconds for
+    multi-AZ configurations and this is done automatically when there is an
+    outage in the DB instance. For this reason, a minimum RTO of *30 minutes*
+    would be reasonable.
+
+  - Minimum RTO for a single region outage
+
+    For the region outage, the read replica would need to be used and
+    promoted. The process of promoting the replica would either need to be
+    automatized or be triggered by an operator. For this reason, the minimum RTO
+    in the current configuration would be *1 hour*.
+
+  - Minimum RPO for a single AZ outage and for a single region outage
+
+    For the RPO, the rationale is similar but the values a little different. For
+    RDS, the RPO is typically around 5 minutes. For this reason, a safe RTO for
+    the single AZ outage would be *20 minutes* while for the region outage *1
+    hour*.
