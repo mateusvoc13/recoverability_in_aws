@@ -1,0 +1,26 @@
+[ec2-user@ip-10-1-10-97 ~]$ mysql udacity -u dbadmin -p -h primarydb.chux1xa83dhr.us-east-2.rds.amazonaws.com
+Enter password:
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 46
+Server version: 8.0.20 Source distribution
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [udacity]> CREATE TABLE accounts (username VARCHAR ( 50 ) UNIQUE NOT NULL, password VARCHAR ( 50 ) NOT NULL, email VARCHAR ( 255 ) UNIQUE NOT NULL);
+Query OK, 0 rows affected (0.08 sec)
+
+MySQL [udacity]> INSERT INTO accounts (username, password, email)
+    -> VALUES('admin', 'adminadmin' ,'admin@admin.com');
+Query OK, 1 row affected (0.01 sec)
+
+MySQL [udacity]> SELECT * from accounts;
++----------+------------+-----------------+
+| username | password   | email           |
++----------+------------+-----------------+
+| admin    | adminadmin | admin@admin.com |
++----------+------------+-----------------+
+1 row in set (0.01 sec)
+
+MySQL [udacity]>

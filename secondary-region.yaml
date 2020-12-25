@@ -41,7 +41,7 @@ Parameters:
 
   PrimaryVPCId:
     Type: String
-    Default: vpc-0d91ef3cddb1ae4f0
+    Default: vpc-051f8133c7e455ea6
 
   PrimaryDBIdentifier:
     Type: String
@@ -229,6 +229,9 @@ Resources:
       DBInstanceClass: db.t2.micro
       SourceRegion: 'us-east-2'
       SourceDBInstanceIdentifier: !Ref PrimaryDBIdentifier
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      VPCSecurityGroups:
+       - !GetAtt DatabaseSecurityGroup.GroupId
       Tags:
         - Key: Name
           Value: UDARR - Secondary Database
